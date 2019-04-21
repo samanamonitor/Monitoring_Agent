@@ -3,40 +3,50 @@ from app import app, mongo, hashing
 
 @app.route('/PULL', methods = ['GET'])
 def pull():
-    d = {
-        "config_interval": 30000,
-        "domain": "",
-        "FileVersionMS": 65536,
-        "logs": [
-            "System",
-            "Application"
-        ],
-        "cpu_interval": 1000,
-        "hostname": "WIN-67T1P3TI72F",
-        "FileVersionLS": 1,
-        "data_url": "https://admin.samana.cloud/monitor/data",
-        "num": 100,
-        "MonitorPath": "https://s3-us-west-2.amazonaws.com/monitor.samanagroup.co/Monitor.exe",
-        "debug": 0,
-        "upload_interval": 10000,
-        "guid": "f8cf06e3-36e6-47ce-b766-bb3387821afb"
-    }
+
+    # This is the default pull config
+    d = app.config['PULL_DEFAULTS']
+
+    # Ensure that all values are accounted from url args
+    # to create key to find config
+    if request.args.get('guid') is None or \
+        request.args.get('hostname') is None or \
+            request.args.get('domain') is None:
+        return 'Bad request', 400
+
+    key = request.args['guid'] + ',' + request.args['hostname'] + ',' + request.args['domain']
+    key = hashing.hash_value(key, salt= app.config['HASH_SALT'])
+
+    # Contains the config changes for this particular client
+    config = mongo.db.clientConfigs.find_one({'key': key}, projection={'_id': False, 'key': False})
+
+    # Modify the the configuration accordingly
+    if config is not None:
+        for k,v in config.items():
+            d[k] = v
+
     return jsonify(d), 200
 
 @app.route('/PUSH', methods = ['POST'])
 def push():
     if not request.is_json:
-        return 'Bad Request. Not JSON.', 400
+        return 'Bad request. Not JSON.', 400
 
+    # Ensure that that the POST body has the minimum required values
     d = request.get_json()
-    key = ''
+    if d['post'].get('guid') is None or \
+        d['post'].get('hostname') is None or \
+            d['post'].get('domain') is None:
+        return 'Bad request', 400
 
-    try:
-        key = d['post']['guid'] + ',' + d['post']['hostname'] + ',' + d['post']['domain']
-        key = hashing.hash_value(key, salt= app.config['HASH_SALT'])
-    except:
-        return 'Bad Request', 400
+    key = d['post']['guid'] + ',' + d['post']['hostname'] + ',' + d['post']['domain']
+    key = hashing.hash_value(key, salt= app.config['HASH_SALT'])
 
-    mongo.db.agentData.insert_one({'key': key, 'data': request.get_data()})
+    # Record the incoming data serialized
+    mongo.db.agentData.update_one(
+        filter={'key': key}, 
+        update={'$set':{'data': request.get_data()}}, 
+        upsert=True
+    )
 
     return 'Okay', 200
