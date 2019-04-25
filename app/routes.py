@@ -1,14 +1,27 @@
-from flask import request, Response, jsonify, render_template
+from flask import request, Response, jsonify, render_template, redirect, url_for
+from flask_login import current_user, login_user, logout_user, login_required
 from app import app, mongo, hashing
+from app.auth import OAuthSignIn
+from app.models import User
 from bson.objectid import ObjectId
 import time, json
 
 @app.route('/')
+@app.route('/index')
+@login_required
 def index():
-    servers = mongo.db.agentData.find(projection={'key': False})
+    page = request.args.get('page', 1, type=int)
+    if page < 1:
+        return redirect(url_for('index'))
+
+    servers = mongo.db.agentData\
+        .find(projection={'key': False})\
+        .skip((page-1)*app.config['PAGINATION_SIZE'])\
+        .limit(app.config['PAGINATION_SIZE'])
     return render_template('index.html', title='Home', servers=servers, time=time)
 
 @app.route('/agent/config')
+@login_required
 def config():
     # This is the default pull config
     d = app.config['PULL_DEFAULTS'].copy()
@@ -39,7 +52,9 @@ def config():
         config=d
     )
 
+# Ajax endpoint for index page
 @app.route('/agent/data/<dataID>')
+@login_required
 def data(dataID):
 
     datum = mongo.db.agentData.find_one_or_404({'_id': ObjectId(dataID)})
@@ -113,6 +128,46 @@ def push():
 
     return 'Okay', 200
 
+@app.route('/login')
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+@app.route('/oauth/google')
+def google_authorize():
+    if not current_user.is_anonymous:
+        return redirect(url_for('index'))
+    oauth = OAuthSignIn.get_provider('google')
+    return oauth.authorize()
+
+
+
+@app.route('/oauth/google/callback')
+def google_callback():
+    if not current_user.is_anonymous:
+        return redirect(url_for('index'))
+    
+    oauth = OAuthSignIn.get_provider('google')
+    email = oauth.callback()
+
+    if email is None:
+        return redirect(url_for('login'))
+
+    user = mongo.db.users.find_one({'email': email})
+    if user is None:
+        user = mongo.db.users.insert({'email': email})
+    
+    login_user(User(user), remember=False)
+    return redirect(url_for('index'))
+
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('errors/404.html'), 404
+

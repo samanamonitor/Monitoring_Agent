@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Welcome to Monitoring Agent</h1>
+<a href={{ url_for('google_authorize') }}>Sign In</a>
+<a href={{ url_for('logout') }}>Sign Out</a>
+{% endblock %}
