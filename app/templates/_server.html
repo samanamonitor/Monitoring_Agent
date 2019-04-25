@@ -1,0 +1,16 @@
+<tr valign="top" id="{{ server._id }}">
+    <td>{{ server.hostname }}</td>
+    <td>{{ server.domain }}</td>
+{% if  server.uploadTime %}
+    <td>{{ time.strftime('%b %d, %Y at %I:%M:%S %p', time.localtime(server.uploadTime)) }}</td>
+{% else %}
+    <td>Not Found</td>
+{% endif %}
+    <td><span id="link{{ server._id }}"><a href="javascript:getData('#{{ server._id }}', '#link{{ server._id }}', '#target{{ server._id }}')">See Agent Data</a></span></td>
+    <td><a href="/agent/config?guid={{ server.guid }}&hostname={{ server.hostname }}&domain={{ server.domain }}">See Agent Config</a></td>
+</tr>
+<tr>
+    <td colspan="6">
+        <pre id="target{{ server._id }}"></pre>
+    </td>
+</tr>

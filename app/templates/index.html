@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<table>
+    <tr>
+        <td><b>Host Name</b></td>
+        <td><b>Domain</b></td>
+        <td><b>Latest Upload</b></td>
+    </tr>
+{% for server in servers %}
+{% include "_server.html" %}
+{% endfor %}
+</table>
+
+<script>
+    cachedData = {};
+    function getData(rowElem, linkElem, targetElem){
+        var hldr = $(linkElem).html();
+        $(linkElem).html('<img src="{{ url_for('static', filename='loading.gif') }}"><a href="#">See Agent Data</a>');
+        if(cachedData[targetElem]){
+            if($(targetElem).text().length){
+                $(targetElem).text("");
+            }else{
+                $(targetElem).html(JSON.stringify(cachedData[targetElem], undefined, 2));
+            }
+        }else{
+            $.get('/agent/data/'+ $(rowElem).attr('id'))
+                .done((res) => {
+                    cachedData[targetElem] = res['post'];
+                    $(targetElem).html(JSON.stringify(res['post'], undefined, 2));
+                }).fail(() => {
+                    $(targetElem).text("Error: could not contact server");
+                });
+        }
+        $(linkElem).html(hldr);
+    }
+</script>
+{% endblock %}

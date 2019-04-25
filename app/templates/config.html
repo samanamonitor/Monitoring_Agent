@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>G,H,D={{ guid }},{{ hostname }},{{ domain }}</h3>
+<table>
+{% for field in config %}
+    <tr>
+        <td>{{ field }}</td>
+        <td>{{ config[field] }}</td>
+    </tr>
+{% endfor %}
+</table>
+{% endblock %}
