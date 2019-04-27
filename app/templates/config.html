@@ -1,13 +1,22 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h3>G,H,D={{ guid }},{{ hostname }},{{ domain }}</h3>
-<table>
+{% block app_content %}
+<div class="container">
+    <div class="card border-info m-3">
+        <div class="card-body">
+            <h4 class="card-title">Hostname: {{ hostname }}</h4>
+            <p class="card-text">Domain: {{ domain }}</p>
+        </div>
+    </div>
+    <div class="container">
+        <table class="table table-striped">
 {% for field in config %}
-    <tr>
-        <td>{{ field }}</td>
-        <td>{{ config[field] }}</td>
-    </tr>
+            <tr>
+                <td>{{ field }}</td>
+                <td>{{ config[field] }}</td>
+            </tr>
 {% endfor %}
-</table>
+        </table>
+    </div>
+</div>
 {% endblock %}

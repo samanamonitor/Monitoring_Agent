@@ -1,7 +1,12 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h1>Welcome to Monitoring Agent</h1>
-<a href={{ url_for('google_authorize') }}>Sign In</a>
-<a href={{ url_for('logout') }}>Sign Out</a>
+{% block app_content %}
+<div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        <h1 class="display-4">Welcome to Monitoring Agent</h1>
+        <p class="lead">Watch over your Windows Servers here!</p>
+        <a href={{ url_for('google_authorize') }} class="btn btn-danger" style="border-radius: 0 !important">Login With Google</a>
+    </div>
+</div>
+<div style="margin-top:500px;"></div>
 {% endblock %}

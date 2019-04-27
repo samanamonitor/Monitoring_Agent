@@ -1,16 +1,14 @@
-<tr valign="top" id="{{ server._id }}">
-    <td>{{ server.hostname }}</td>
-    <td>{{ server.domain }}</td>
-{% if  server.uploadTime %}
-    <td>{{ time.strftime('%b %d, %Y at %I:%M:%S %p', time.localtime(server.uploadTime)) }}</td>
-{% else %}
-    <td>Not Found</td>
-{% endif %}
-    <td><span id="link{{ server._id }}"><a href="javascript:getData('#{{ server._id }}', '#link{{ server._id }}', '#target{{ server._id }}')">See Agent Data</a></span></td>
-    <td><a href="/agent/config?guid={{ server.guid }}&hostname={{ server.hostname }}&domain={{ server.domain }}">See Agent Config</a></td>
-</tr>
-<tr>
-    <td colspan="6">
-        <pre id="target{{ server._id }}"></pre>
-    </td>
-</tr>
+<div class="card">
+    <div class="card-header">
+        <div class="row align-items-center">
+                <div class="col-2">{{ server.hostname }}</div>
+                <div class="col-2">{{ server.domain }}</div>
+                <div class="col-2">{{ time.strftime('%b %d, %Y at %I:%M:%S %p', time.localtime(server.uploadTime)) }}</div>
+                <a href="#collapse{{ server._id }}" class="col-2 btn btn-info m-3" data-parent="#accordian" data-toggle="collapse">See Agent Data</a>
+                <a href="/agent/config?guid={{ server.guid }}&hostname={{ server.hostname }}&domain={{ server.domain }}" class="col-2 btn btn-info m-3">See Agent Config</a>
+        </div>
+    </div>
+    <div class="collapse" id="collapse{{ server._id }}">
+        <div class="card-body" id="target{{ server._id }}"></div>
+    </div>
+</div>

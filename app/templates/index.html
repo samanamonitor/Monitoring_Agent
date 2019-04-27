@@ -1,38 +1,59 @@
 {% extends "base.html" %}
 
-{% block content %}
-<table>
-    <tr>
-        <td><b>Host Name</b></td>
-        <td><b>Domain</b></td>
-        <td><b>Latest Upload</b></td>
-    </tr>
+{% block app_content %}
+<div class="container">
+    <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                        <div class="col-2">Host Name</div>
+
+                        <div class="col-2">Domain</div>
+                        <div class="col-2">Last Upload</div>
+                        <div class="col-2"></div>
+                        <div class="col-2"></div>
+                </div>
+            </div>
+        </div>
+    <div class="accordian">
 {% for server in servers %}
 {% include "_server.html" %}
 {% endfor %}
-</table>
+    </div>
+</div>
+<nav>
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not prev_url %}disabled{% endif %}">
+            <a href="{{ prev_url or '#' }}" class="page-link">
+                <span>&larr;</span>
+            </a>
+        </li>
+        <li class="page-item {% if not next_url %}disabled{% endif %}">
+            <a href="{{ next_url or '#' }}" class="page-link">
+                <span>&rarr;</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endblock %}
 
+{% block scripts %}
+{{ super() }}
 <script>
-    cachedData = {};
-    function getData(rowElem, linkElem, targetElem){
-        var hldr = $(linkElem).html();
-        $(linkElem).html('<img src="{{ url_for('static', filename='loading.gif') }}"><a href="#">See Agent Data</a>');
-        if(cachedData[targetElem]){
-            if($(targetElem).text().length){
-                $(targetElem).text("");
-            }else{
-                $(targetElem).html(JSON.stringify(cachedData[targetElem], undefined, 2));
-            }
+    $('.accordian a').click(function(){
+        if($(this).hasClass("show")){
+            $(this).removeClass("show");
         }else{
-            $.get('/agent/data/'+ $(rowElem).attr('id'))
-                .done((res) => {
-                    cachedData[targetElem] = res['post'];
-                    $(targetElem).html(JSON.stringify(res['post'], undefined, 2));
-                }).fail(() => {
-                    $(targetElem).text("Error: could not contact server");
-                });
+            var href = this.hash;
+            var id = href.replace("#collapse",""); 
+
+            $.getJSON('/agent/data/' + id)
+                .done(data => {
+                    $('#target'+id).html(
+                    '<pre>' + JSON.stringify(data['post'], undefined, 2) + '</pre>'
+                    );
+                })
+                .then(() => $(this).addClass("show"));
         }
-        $(linkElem).html(hldr);
-    }
+    })
 </script>
 {% endblock %}
