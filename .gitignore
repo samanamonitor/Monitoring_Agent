@@ -3,4 +3,4 @@ __pycache__
 venv
 .vscode
 client_secret_61114980844-al4854og7u0p5e1u5h7c310b4302mfdd.apps.googleusercontent.com.json
-notes.org
+*.org
