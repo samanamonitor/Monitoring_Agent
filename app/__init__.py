@@ -18,7 +18,4 @@ bootstrap = Bootstrap(app)
 # Add Pull defaults from a MongoDB collection
 app.config['PULL_DEFAULTS'] = mongo.db.defaultConfig.find_one(projection={'_id': False})
 
-# Add Google Client file for configuring Google OAuth
-app.config['GOOGLE_CLIENT_JSON_PATH'] = app.instance_path + 'client_secret_' + app.config['GOOGLE_CLIENT_ID'] + '.json'
-
 from app import routes
