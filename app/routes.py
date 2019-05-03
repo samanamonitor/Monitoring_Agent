@@ -13,12 +13,31 @@ def index():
     page = request.args.get('page', 1, type=int)
     if page < 1:
         return redirect(url_for('index'))
+    
+    prev_page = page - 1
+    if prev_page < 1:
+        prev_page = None
+    next_page = None
+    count = mongo.db.agentData\
+        .find(projection={'key': False})\
+        .skip((page)*app.config['PAGINATION_SIZE'])\
+        .limit(app.config['PAGINATION_SIZE'])\
+        .count()
+    if count > 0:
+        next_page = page + 1
 
     servers = mongo.db.agentData\
         .find(projection={'key': False})\
         .skip((page-1)*app.config['PAGINATION_SIZE'])\
         .limit(app.config['PAGINATION_SIZE'])
-    return render_template('index.html', title='Home', servers=servers, time=time)
+    return render_template(
+        'index.html', 
+        title='Home', 
+        servers=servers, 
+        time=time, 
+        prev_page=prev_page, 
+        next_page=next_page
+    )
 
 @app.route('/agent/config')
 @login_required
