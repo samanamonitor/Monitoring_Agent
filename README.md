@@ -75,5 +75,5 @@ sudo ln -s /etc/apache2/conf-available/monitoring_agent.conf /etc/apache2/conf-e
 ```
 * Reload Apache
 ```script
-sudo service apache2 reload
+$ sudo service apache2 reload
 ```

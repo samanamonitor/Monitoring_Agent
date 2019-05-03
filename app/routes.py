@@ -21,8 +21,8 @@ def index():
     count = mongo.db.agentData\
         .find(projection={'key': False})\
         .skip((page)*app.config['PAGINATION_SIZE'])\
-        .limit(app.config['PAGINATION_SIZE'])\
-        .count()
+        .count(True)
+    print(count)
     if count > 0:
         next_page = page + 1
 
