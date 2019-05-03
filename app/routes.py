@@ -162,7 +162,8 @@ def google_callback():
 
     user = mongo.db.users.find_one({'email': email})
     if user is None:
-        user = mongo.db.users.insert({'email': email})
+        id = mongo.db.users.insert({'email': email})
+        user = mongo.db.users.find_one({'_id': id})
     
     login_user(User(user), remember=False)
     return redirect(url_for('index'))
