@@ -73,7 +73,6 @@ def config():
 
 # Ajax endpoint for index page
 @app.route('/agent/data/<dataID>')
-@login_required
 def data(dataID):
 
     datum = mongo.db.agentData.find_one_or_404({'_id': ObjectId(dataID)})
@@ -91,11 +90,11 @@ def pull():
     d = app.config['PULL_DEFAULTS'].copy()
 
     # Ensure that all values are accounted from url args
-    # to create key to find config
+    # to create key to find config or else send default config
     if request.args.get('guid') is None or \
         request.args.get('hostname') is None or \
             request.args.get('domain') is None:
-        return 'Bad request', 400
+        return jsonify(d), 200
 
     key = request.args['guid'] + ',' + request.args['hostname'] + ',' + request.args['domain']
     key = hashing.hash_value(key, salt= app.config['HASH_SALT'])
