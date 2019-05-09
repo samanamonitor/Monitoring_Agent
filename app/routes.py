@@ -3,6 +3,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from app import app, mongo, hashing
 from app.auth import OAuthSignIn
 from app.models import User
+from app.forms import EditConfigField
 from bson.objectid import ObjectId
 import time, json
 
@@ -69,6 +70,53 @@ def config():
         hostname=request.args['hostname'], 
         domain=request.args['domain'], 
         config=d
+    )
+
+@app.route('/agent/config/edit', methods=['GET', 'POST'])
+@login_required
+def editConfig():
+    # Ensure that all values are accounted from url args
+    # to edit the corresponding config
+    if request.args.get('guid') is None or \
+        request.args.get('hostname') is None or \
+            request.args.get('domain') is None:
+        return render_template('errors/404.html'), 400
+
+    key = request.args['guid'] + ',' + request.args['hostname'] + ',' + request.args['domain']
+    key = hashing.hash_value(key, salt= app.config['HASH_SALT'])
+
+    form=EditConfigField(key)
+    if form.validate_on_submit():
+        mongo.db.clientConfigs.update_one(
+            {'key': key},
+            update={'$set': form.toDict()}, 
+            upsert=True
+        )
+        print('Submit')
+        return redirect(
+            url_for('config') + '?guid=' + request.args['guid'] + '&hostname=' + request.args['hostname'] + '&domain=' + request.args['domain']
+        )
+    elif request.method == 'GET':
+        d = app.config['PULL_DEFAULTS']
+        data = mongo.db.clientConfigs.find_one({'key': key}, projection={'_id': False, 'key': False})
+        if data is not None:
+            d = data
+        form.config_interval.data = d.get('config_interval')
+        form.FileVersionMS.data = d.get('FileVersionMS')
+        form.cpu_interval.data = d.get('cpu_interval')
+        form.FileVersionLS.data = d.get('FileVersionLS')
+        form.data_url.data = d.get('data_url')
+        form.num.data = d.get('num')
+        form.MonitorPath.data = d.get('MonitorPath')
+        form.debug.data = d.get('debug')
+        form.upload_interval.data = d.get('upload_interval')
+
+    print(form.errors)
+    return render_template(
+        'edit_config.html', 
+        form=form, 
+        hostname=request.args['hostname'], 
+        domain=request.args['domain']
     )
 
 # Ajax endpoint for index page

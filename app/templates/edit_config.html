@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 
 {% block app_content %}
 <div class="container">
@@ -9,15 +10,7 @@
         </div>
     </div>
     <div class="container">
-        <table class="table table-striped">
-{% for field in config %}
-            <tr>
-                <td>{{ field }}</td>
-                <td>{{ config[field] }}</td>
-            </tr>
-{% endfor %}
-        </table>
-        <a href="/agent/config/edit?guid={{ guid }}&hostname={{ hostname }}&domain={{ domain }}" class="col-2 btn btn-info m-3">Edit</a>
+        {{ wtf.quick_form(form) }}
     </div>
 </div>
 {% endblock %}
