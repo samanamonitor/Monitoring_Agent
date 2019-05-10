@@ -13,3 +13,4 @@ class Config(object):
             'secret': GOOGLE_CLIENT_SECRET
         }
     }
+    ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')

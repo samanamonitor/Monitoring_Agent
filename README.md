@@ -9,6 +9,8 @@ $ mongo
 > use monitoringAgentDB
 > db.defaultConfig.insert(<defaultdoc>)
 ```
+### Setup Elasticsearch (for searches by `domain` and `hostname`)
+Follow the installation instructions for installing elastic search [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/targz.html).
 ### Generate Google OAuth 2.0 client credentials
 Follow instructions [here](https://developers.google.com/adwords/api/docs/guides/authentication#webapp) to generate a Google OAuth client ID and secret.
 ### Install Apache and Git
@@ -58,11 +60,14 @@ $ sudo ln -s /etc/apache2/mods-available/mod_wsgi.conf /etc/apache2/mods-enabled
 * Create a `.flaskenv` file in the project root directory of the form `.flaskenv.example` (found in the project root directory). The variables found in `.flaskenv.example` are described as follows:
  
   * `FLASK_APP`: Used for testing for runing the flask app locally. Set it to `test.py` so that runing `flask run` will host the app on localhost:5000
+  * `SECRET_KEY`: Used for CSRF tockens. Reccomended for production.
   * `FLASK_ENV`: Used for debugging. Set this to `development` to run the app on debug mode. (WARNING: Do not set in production)
   * `HASH_SALT`: (required) A hash salt for the keys made for agent data documents
-  * `PAGINATION_SIZE`: (required) Set to a non-negative integer that sets how many entries can be listed in the index page at a time.
+  * `PAGINATION_SIZE`: (optional) Set to a non-negative integer that sets how many entries can be listed in the index page at a time. Default value is `50`.
   * `GOOGLE_CLIENT_ID`: web client ID for Google OAuth 2.0 credentials
   * `GOOGLE_CLIENT_SECRET`: web client secret for Google OAuth 2.0 credentials
+  * `MONGO_URI`: (optional) When not set, it's default value is `mongodb://localhost:27017/monitoringAgentDB`
+  * `ELASTICSEARCH_URL`: (optional) If not set, search functionality is disabled. If elasticsearch is installed locally with defaults, this should be set to `http://localhost:9200`.
 * Copy the project to Apache's `www` directory. Should look something like this:
 ```script
 $ sudo cp -r ~/Monitoring_Agent /var/www/Monitoring_Agent

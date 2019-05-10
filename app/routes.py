@@ -1,12 +1,18 @@
-from flask import request, Response, jsonify, render_template, redirect, url_for, send_file
+from flask import request, Response, jsonify, render_template, redirect, url_for, send_file, g
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, mongo, hashing
 from app.auth import OAuthSignIn
 from app.models import User
-from app.forms import EditConfigField
+from app.forms import EditConfigField, SearchForm
+from app.search import add_to_index, query_index
 from bson.objectid import ObjectId
 import time, json
 from app.helpers import changes
+
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        g.search_form = SearchForm()
 
 @app.route('/')
 @app.route('/index')
@@ -37,6 +43,30 @@ def index():
         title='Home', 
         servers=servers, 
         time=time, 
+        prev_page=prev_page, 
+        next_page=next_page
+    )
+
+@app.route('/search')
+def search():
+    if not g.search_form.validate():
+        return redirect(url_for('index'))
+    page = request.args.get('page', 1, type=int)
+    keys, total = query_index(
+        index='agentdata', 
+        query=g.search_form.q.data, 
+        page=page, 
+        per_page=app.config['PAGINATION_SIZE']
+    )
+    servers = mongo.db.agentData.find({'key': {'$in': keys}})
+    prev_page = page - 1 if page > 1 else None
+    next_page = page + 1 if total > page * app.config['PAGINATION_SIZE'] else None
+
+    return render_template(
+        'search.html', 
+        title='Search',
+        servers=servers,
+        time=time,
         prev_page=prev_page, 
         next_page=next_page
     )
@@ -220,11 +250,15 @@ def push():
     }
 
     # Record the incoming data serialized
-    mongo.db.agentData.update_one(
+    result = mongo.db.agentData.update_one(
         filter={'key': key}, 
         update={'$set': dataToSet}, 
         upsert=True
     )
+
+    if result.upserted_id is not None:
+        print("I'm in!")
+        add_to_index(index='agentdata', key=key, doc={'hostname':hostname, 'domain':domain})
 
     return 'Okay', 200
 

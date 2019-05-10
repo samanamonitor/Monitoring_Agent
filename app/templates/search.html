@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<div class="container">
+    <h1>Search Results:</h1>
+    <div class="card"><a href="{{ url_for('getAgentSideTool') }}" class="btn btn-info">Download Agent-side tool</a></div>
+    <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                        <div class="col-2">Host Name</div>
+
+                        <div class="col-2">Domain</div>
+                        <div class="col-2">Last Upload</div>
+                        <div class="col-2"></div>
+                        <div class="col-2"></div>
+                </div>
+            </div>
+        </div>
+    <div class="accordian">
+{% for server in servers %}
+{% include "_server.html" %}
+{% endfor %}
+    </div>
+</div>
+<nav>
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not prev_page %}disabled{% endif %}">
+            <a href="{{ url_for('index') }}{% if prev_page %}?page={{ prev_page }}{% endif %}" class="page-link">
+                <span>&larr;</span>
+            </a>
+        </li>
+        <li class="page-item{% if not next_page %} disabled{% endif %}">
+            <a href="{{ url_for('index') }}{% if next_page %}?page={{ next_page }}{% endif %}" class="page-link">
+                <span>&rarr;</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    $('.accordian a').click(function(){
+        var href = this.hash;
+        if(href.indexOf("#collapse") > -1){
+            if($(this).hasClass("show")){
+                $(this).removeClass("show");
+            }else{
+                var key = href.replace("#collapse",""); 
+    
+                $.getJSON('/agent/data/' + key)
+                    .done(data => {
+                        $('#target'+key).html(
+                        '<pre>' + JSON.stringify(data['post'], undefined, 2) + '</pre>'
+                        );
+                    })
+                    .then(() => $(this).addClass("show"));
+            }
+        }else if(href.indexOf("#copy") > -1){
+            var copyText = href.replace("#copy","");
+            var $temp = $("<input>");
+            $("body").append($temp);
+            $temp.val(copyText).select();
+            document.execCommand("copy");
+            $temp.remove();
+        }
+    })
+</script>
+{% endblock %}
