@@ -5,7 +5,7 @@ from wtforms.validators import DataRequired
 class EditConfigField(FlaskForm):
     config_interval=FloatField('config_interval', validators=[DataRequired()])
     FileVersionMS=FloatField('FileVersionMS', validators=[DataRequired()])
-    # logs
+    logs=StringField('logs', validators=[DataRequired()])
     cpu_interval=FloatField('cpu_interval', validators=[DataRequired()])
     FileVersionLS=FloatField('FileVersionLS', validators=[DataRequired()])
     data_url=StringField('data_url', validators=[DataRequired()])
@@ -23,6 +23,7 @@ class EditConfigField(FlaskForm):
         return {
             'config_interval' : self.config_interval.data,
             'FileVersionMS' : self.FileVersionMS.data,
+            'logs' : self.parseLogsField(),
             'cpu_interval' : self.cpu_interval.data,
             'FileVersionLS' : self.FileVersionLS.data,
             'data_url' : self.data_url.data,
@@ -31,4 +32,10 @@ class EditConfigField(FlaskForm):
             'debug' : self.debug.data,
             'upload_interval' : self.upload_interval.data,
         }
+
+    def parseLogsField(self):
+        out = []
+        for word in self.logs.data.split(","):
+            out.append(word.strip("\"\' "))
+        return out
         

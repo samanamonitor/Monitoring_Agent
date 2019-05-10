@@ -18,6 +18,7 @@
 {% endfor %}
         </table>
         <a href="/agent/config/edit?guid={{ guid }}&hostname={{ hostname }}&domain={{ domain }}" class="col-2 btn btn-info m-3">Edit</a>
+        <a href="/agent/config/reset?guid={{ guid }}&hostname={{ hostname }}&domain={{ domain }}" class="col-2 btn btn-danger m-3{% if isDefault %} disabled{% endif %}">Reset to Default</a>
     </div>
 </div>
 {% endblock %}

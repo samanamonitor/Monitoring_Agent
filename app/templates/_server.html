@@ -4,11 +4,12 @@
                 <div class="col-2">{{ server.hostname }}</div>
                 <div class="col-2">{{ server.domain }}</div>
                 <div class="col-2">{{ time.strftime('%b %d, %Y at %I:%M:%S %p', time.localtime(server.uploadTime)) }}</div>
-                <a href="#collapse{{ server._id }}" class="col-2 btn btn-info m-3" data-parent="#accordian" data-toggle="collapse">See Agent Data</a>
-                <a href="/agent/config?guid={{ server.guid }}&hostname={{ server.hostname }}&domain={{ server.domain }}" class="col-2 btn btn-info m-3">See Agent Config</a>
+                <div class="col-2"><a href="#copy{{ server.key }}" class="btn btn-info">Copy Hash</a></div>
+                <div class="col-2"><a href="#collapse{{ server.key }}" class="btn btn-info" data-parent="#accordian" data-toggle="collapse">See Agent Data</a></div>
+                <div class="col-2"><a href="/agent/config?guid={{ server.guid }}&hostname={{ server.hostname }}&domain={{ server.domain }}" class="btn btn-info">See Agent Config</a></div>
         </div>
     </div>
-    <div class="collapse" id="collapse{{ server._id }}">
-        <div class="card-body" id="target{{ server._id }}"></div>
+    <div class="collapse" id="collapse{{ server.key }}">
+        <div class="card-body" id="target{{ server.key }}"></div>
     </div>
 </div>

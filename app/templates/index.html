@@ -2,6 +2,7 @@
 
 {% block app_content %}
 <div class="container">
+    <div class="card"><a href="{{ url_for('getAgentSideTool') }}" class="btn btn-info">Download Agent-side tool</a></div>
     <div class="card">
             <div class="card-body">
                 <div class="row align-items-center">
@@ -40,19 +41,28 @@
 {{ super() }}
 <script>
     $('.accordian a').click(function(){
-        if($(this).hasClass("show")){
-            $(this).removeClass("show");
-        }else{
-            var href = this.hash;
-            var id = href.replace("#collapse",""); 
-
-            $.getJSON('/agent/data/' + id)
-                .done(data => {
-                    $('#target'+id).html(
-                    '<pre>' + JSON.stringify(data['post'], undefined, 2) + '</pre>'
-                    );
-                })
-                .then(() => $(this).addClass("show"));
+        var href = this.hash;
+        if(href.indexOf("#collapse") > -1){
+            if($(this).hasClass("show")){
+                $(this).removeClass("show");
+            }else{
+                var key = href.replace("#collapse",""); 
+    
+                $.getJSON('/agent/data/' + key)
+                    .done(data => {
+                        $('#target'+key).html(
+                        '<pre>' + JSON.stringify(data['post'], undefined, 2) + '</pre>'
+                        );
+                    })
+                    .then(() => $(this).addClass("show"));
+            }
+        }else if(href.indexOf("#copy") > -1){
+            var copyText = href.replace("#copy","");
+            var $temp = $("<input>");
+            $("body").append($temp);
+            $temp.val(copyText).select();
+            document.execCommand("copy");
+            $temp.remove();
         }
     })
 </script>

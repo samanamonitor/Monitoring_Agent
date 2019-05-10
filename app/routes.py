@@ -1,4 +1,4 @@
-from flask import request, Response, jsonify, render_template, redirect, url_for
+from flask import request, Response, jsonify, render_template, redirect, url_for, send_file
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, mongo, hashing
 from app.auth import OAuthSignIn
@@ -6,6 +6,7 @@ from app.models import User
 from app.forms import EditConfigField
 from bson.objectid import ObjectId
 import time, json
+from app.helpers import changes
 
 @app.route('/')
 @app.route('/index')
@@ -20,15 +21,15 @@ def index():
         prev_page = None
     next_page = None
     count = mongo.db.agentData\
-        .find(projection={'key': False})\
+        .find(projection={'_id': False})\
         .skip((page)*app.config['PAGINATION_SIZE'])\
         .count(True)
-    print(count)
+
     if count > 0:
         next_page = page + 1
 
     servers = mongo.db.agentData\
-        .find(projection={'key': False})\
+        .find()\
         .skip((page-1)*app.config['PAGINATION_SIZE'])\
         .limit(app.config['PAGINATION_SIZE'])
     return render_template(
@@ -39,6 +40,13 @@ def index():
         prev_page=prev_page, 
         next_page=next_page
     )
+
+@app.route('/get-agent-side-tool')
+def getAgentSideTool():
+    try:
+        return send_file('static/agent_side_script.zip', attachment_filename='agent_side_script.zip')
+    except Exception as e:
+        return str(e)
 
 @app.route('/agent/config')
 @login_required
@@ -60,7 +68,9 @@ def config():
     config = mongo.db.clientConfigs.find_one({'key': key}, projection={'_id': False, 'key': False})
 
     # Modify the the configuration accordingly
+    isDefault = True
     if config is not None:
+        isDefault = False
         for k,v in config.items():
             d[k] = v
 
@@ -69,7 +79,8 @@ def config():
         guid=request.args['guid'], 
         hostname=request.args['hostname'], 
         domain=request.args['domain'], 
-        config=d
+        config=d,
+        isDefault=isDefault
     )
 
 @app.route('/agent/config/edit', methods=['GET', 'POST'])
@@ -86,23 +97,28 @@ def editConfig():
     key = hashing.hash_value(key, salt= app.config['HASH_SALT'])
 
     form=EditConfigField(key)
+    d = app.config['PULL_DEFAULTS']
     if form.validate_on_submit():
-        mongo.db.clientConfigs.update_one(
-            {'key': key},
-            update={'$set': form.toDict()}, 
-            upsert=True
-        )
-        print('Submit')
+        configChanges = changes(d, form.toDict())
+        if len(configChanges) > 0:
+            mongo.db.clientConfigs.update_one(
+                {'key': key},
+                update={'$set': configChanges}, 
+                upsert=True
+            )
+        else:
+            mongo.db.clientConfigs.delete_one({'key': key})
         return redirect(
             url_for('config') + '?guid=' + request.args['guid'] + '&hostname=' + request.args['hostname'] + '&domain=' + request.args['domain']
         )
     elif request.method == 'GET':
-        d = app.config['PULL_DEFAULTS']
         data = mongo.db.clientConfigs.find_one({'key': key}, projection={'_id': False, 'key': False})
         if data is not None:
-            d = data
+            for k,v in data.items():
+                d[k] = v
         form.config_interval.data = d.get('config_interval')
         form.FileVersionMS.data = d.get('FileVersionMS')
+        form.logs.data = ','.join(d.get('logs'))
         form.cpu_interval.data = d.get('cpu_interval')
         form.FileVersionLS.data = d.get('FileVersionLS')
         form.data_url.data = d.get('data_url')
@@ -111,7 +127,6 @@ def editConfig():
         form.debug.data = d.get('debug')
         form.upload_interval.data = d.get('upload_interval')
 
-    print(form.errors)
     return render_template(
         'edit_config.html', 
         form=form, 
@@ -119,11 +134,30 @@ def editConfig():
         domain=request.args['domain']
     )
 
-# Ajax endpoint for index page
-@app.route('/agent/data/<dataID>')
-def data(dataID):
+# Reset config changes to deafault values
+@app.route('/agent/config/reset')
+def resetConfig():
+    # Ensure that all values are accounted from url args
+    # to edit the corresponding config
+    if request.args.get('guid') is None or \
+        request.args.get('hostname') is None or \
+            request.args.get('domain') is None:
+        return render_template('errors/404.html'), 400
 
-    datum = mongo.db.agentData.find_one_or_404({'_id': ObjectId(dataID)})
+    key = request.args['guid'] + ',' + request.args['hostname'] + ',' + request.args['domain']
+    key = hashing.hash_value(key, salt= app.config['HASH_SALT'])
+
+    mongo.db.clientConfigs.delete_one({'key': key})
+
+    return redirect(
+        url_for('config') + '?guid=' + request.args['guid'] + '&hostname=' + request.args['hostname'] + '&domain=' + request.args['domain']
+    )
+
+# Ajax endpoint for index page
+@app.route('/agent/data/<key>')
+def data(key):
+
+    datum = mongo.db.agentData.find_one_or_404({'key': key})
     serial = datum['data']
 
     res = Response(serial)
