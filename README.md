@@ -10,7 +10,7 @@ $ mongo
 > db.defaultConfig.insert(<defaultdoc>)
 ```
 ### Setup Elasticsearch (for searches by `domain` and `hostname`)
-Follow the installation instructions for installing elastic search [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/targz.html).
+This is an optional feature. If you would like the feature, follow the installation instructions for installing Elasticsearch [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/targz.html).
 ### Generate Google OAuth 2.0 client credentials
 Follow instructions [here](https://developers.google.com/adwords/api/docs/guides/authentication#webapp) to generate a Google OAuth client ID and secret.
 ### Install Apache and Git
@@ -67,7 +67,7 @@ $ sudo ln -s /etc/apache2/mods-available/mod_wsgi.conf /etc/apache2/mods-enabled
   * `GOOGLE_CLIENT_ID`: web client ID for Google OAuth 2.0 credentials
   * `GOOGLE_CLIENT_SECRET`: web client secret for Google OAuth 2.0 credentials
   * `MONGO_URI`: (optional) When not set, it's default value is `mongodb://localhost:27017/monitoringAgentDB`
-  * `ELASTICSEARCH_URL`: (optional) If not set, search functionality is disabled. If elasticsearch is installed locally with defaults, this should be set to `http://localhost:9200`.
+  * `ELASTICSEARCH_URL`: (optional) If not set, search functionality is disabled. If elasticsearch is installed locally with defaults, this should be set to `http://localhost:9200`. A JSON file should appear at that URL if Elasticsearch is running. If not, try starting it by running `$ sudo service elasticsearch start`.
 * Copy the project to Apache's `www` directory. Should look something like this:
 ```script
 $ sudo cp -r ~/Monitoring_Agent /var/www/Monitoring_Agent
